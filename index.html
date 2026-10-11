@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Data Explorer Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #f8fafc;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --text-dark: #0f172a;
+      --text-muted: #64748b;
+      --accent-blue: #2563eb;
+      --accent-cyan: #0284c7;
+      --accent-green: #059669;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-dark);
+      line-height: 1.5;
+      padding-bottom: 3rem;
+    }
+
+    .navbar {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-icon {
+      width: 38px; height: 38px;
+      background: var(--accent-blue);
+      color: #ffffff; border-radius: 0.5rem;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.1rem;
+    }
+    .brand-title { font-size: 1.2rem; font-weight: 700; color: var(--text-dark); }
+
+    .nav-tabs { display: flex; gap: 0.5rem; }
+    .nav-tab {
+      padding: 0.55rem 1.1rem; border-radius: 0.4rem;
+      font-size: 0.875rem; font-weight: 600; color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+    }
+    .nav-tab:hover { color: var(--text-dark); background: #f1f5f9; }
+    .nav-tab.active { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+
+    .container { max-width: 1150px; margin: 2rem auto 0; padding: 0 1.5rem; }
+
+    .page-view { display: none; }
+    .page-view.active { display: block; }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1.75rem; margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .card-title {
+      font-size: 1.1rem; font-weight: 700; color: var(--text-dark);
+      margin-bottom: 1.25rem; padding-bottom: 0.5rem;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .controls-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    @media (max-width: 800px) { .controls-grid { grid-template-columns: 1fr; } }
+
+    input, select {
+      width: 100%; background: #ffffff;
+      border: 1px solid var(--border-color); border-radius: 0.4rem;
+      padding: 0.65rem 0.85rem; color: var(--text-dark); font-size: 0.9rem; outline: none;
+    }
+    input:focus, select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+    .btn-secondary {
+      background: #f1f5f9; border: 1px solid var(--border-color);
+      color: var(--text-dark); padding: 0.5rem 1rem; border-radius: 0.4rem;
+      font-weight: 600; cursor: pointer; font-size: 0.85rem;
+    }
+    .btn-secondary:hover { background: #e2e8f0; }
+
+    .df-table-wrapper { overflow-x: auto; max-height: 420px; border: 1px solid var(--border-color); border-radius: 0.4rem; }
+    .df-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .df-table th, .df-table td { padding: 0.7rem 0.95rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .df-table th { background: #f1f5f9; color: var(--text-dark); font-weight: 700; position: sticky; top: 0; }
+    .df-table tr:hover { background: #f8fafc; }
+
+    .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 800px) { .grid-two { grid-template-columns: 1fr; } }
+
+    .table-freq { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .table-freq th, .table-freq td { padding: 0.6rem 0.8rem; border: 1px solid var(--border-color); text-align: center; }
+    .table-freq th { background: #f1f5f9; color: var(--accent-blue); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="brand">
+      <div class="brand-icon">SDE</div>
+      <div class="brand-title">Student Data Explorer</div>
+    </div>
+    <div class="nav-tabs">
+      <div class="nav-tab active" onclick="switchTab('table')">📋 Student Records</div>
+      <div class="nav-tab" onclick="switchTab('analytics')">📊 Department Analytics</div>
+      <div class="nav-tab" onclick="switchTab('query')">🔍 Query & Filters</div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- PAGE 1: STUDENT RECORDS TABLE -->
+    <div id="page-table" class="page-view active">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+          <div class="card-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">Student Records Dataset</div>
+          <span style="font-size:0.85rem; color:var(--text-muted);">Rows Matched: <strong id="dfDimensions" style="color:var(--accent-blue);">15 Records</strong></span>
+        </div>
+        <div class="df-table-wrapper">
+          <table class="df-table">
+            <thead>
+              <tr>
+                <th>Index</th>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Year</th>
+                <th>Marks</th>
+                <th>Attendance (%)</th>
+              </tr>
+            </thead>
+            <tbody id="dfBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2: DEPARTMENT ANALYTICS -->
+    <div id="page-analytics" class="page-view">
+      <div class="grid-two">
+        <div class="card">
+          <div class="card-title">Department Distribution</div>
+          <table class="table-freq">
+            <thead>
+              <tr id="freqHeader"></tr>
+            </thead>
+            <tbody>
+              <tr id="freqCounts"></tr>
+              <tr id="freqPercentages"></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Score Summary Statistics</div>
+          <div id="statsSummaryBox" style="background:#f8fafc; border:1px solid var(--border-color); padding:1.25rem; border-radius:0.5rem; font-size:0.9rem; line-height:1.8; color:var(--text-dark);">
+            Min Score: 62.0 <br> Mean Score: 83.6 <br> Max Score: 98.0
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 3: QUERY & FILTERS -->
+    <div id="page-query" class="page-view">
+      <div class="card">
+        <div class="card-title">Filter Student Records</div>
+        <div class="controls-grid">
+          <div>
+            <label>Search Student ID or Name</label>
+            <input type="text" id="searchQuery" placeholder="Filter by ID or Name..." oninput="applyFilters()">
+          </div>
+          <div>
+            <label>Department Filter</label>
+            <select id="deptSelect" onchange="applyFilters()">
+              <option value="ALL">ALL DEPARTMENTS</option>
+              <option value="AIDS">AIDS</option>
+              <option value="CSE">CSE</option>
+              <option value="ECE">ECE</option>
+              <option value="IT">IT</option>
+            </select>
+          </div>
+          <div>
+            <label>Marks Threshold</label>
+            <input type="number" id="minMarks" value="0" min="0" max="100" oninput="applyFilters()">
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem;">
+          <button class="btn-secondary" onclick="document.getElementById('searchQuery').value=''; document.getElementById('deptSelect').value='ALL'; document.getElementById('minMarks').value='0'; applyFilters();">Reset All Filters</button>
+          <button class="btn-secondary" style="background:var(--accent-blue); color:#fff;" onclick="switchTab('table')">View Filtered Table →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const dataset = [
+      { id: "S101", name: "Alex Rivera", dept: "AIDS", year: 2, marks: 95, attendance: 92 },
+      { id: "S102", name: "Brian Chen", dept: "CSE", year: 2, marks: 88, attendance: 85 },
+      { id: "S103", name: "Catherine Miller", dept: "AIDS", year: 2, marks: 92, attendance: 96 },
+      { id: "S104", name: "David Kim", dept: "ECE", year: 2, marks: 74, attendance: 78 },
+      { id: "S105", name: "Emily Watson", dept: "IT", year: 2, marks: 81, attendance: 89 },
+      { id: "S106", name: "Frank Gomez", dept: "AIDS", year: 2, marks: 68, attendance: 72 },
+      { id: "S107", name: "Grace Hopper", dept: "CSE", year: 2, marks: 98, attendance: 99 },
+      { id: "S108", name: "Hannah Abbott", dept: "ECE", year: 2, marks: 62, attendance: 70 },
+      { id: "S109", name: "Ian Malcolm", dept: "IT", year: 2, marks: 85, attendance: 88 },
+      { id: "S110", name: "Julia Roberts", dept: "AIDS", year: 2, marks: 90, attendance: 94 },
+      { id: "S111", name: "Kevin Bacon", dept: "CSE", year: 2, marks: 77, attendance: 81 },
+      { id: "S112", name: "Laura Croft", dept: "IT", year: 2, marks: 89, attendance: 91 },
+      { id: "S113", name: "Michael Scott", dept: "ECE", year: 2, marks: 71, attendance: 75 },
+      { id: "S114", name: "Nina Williams", dept: "AIDS", year: 2, marks: 90, attendance: 90 },
+      { id: "S115", name: "Oscar Martinez", dept: "CSE", year: 2, marks: 93, attendance: 95 }
+    ];
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.page-view').forEach(page => page.classList.remove('active'));
+
+      if (tabId === 'table') {
+        document.querySelectorAll('.nav-tab')[0].classList.add('active');
+        document.getElementById('page-table').classList.add('active');
+      } else if (tabId === 'analytics') {
+        document.querySelectorAll('.nav-tab')[1].classList.add('active');
+        document.getElementById('page-analytics').classList.add('active');
+      } else if (tabId === 'query') {
+        document.querySelectorAll('.nav-tab')[2].classList.add('active');
+        document.getElementById('page-query').classList.add('active');
+      }
+    }
+
+    function applyFilters() {
+      const query = document.getElementById("searchQuery").value.toLowerCase().trim();
+      const selectedDept = document.getElementById("deptSelect").value;
+      const minMarks = parseInt(document.getElementById("minMarks").value) || 0;
+
+      const filtered = dataset.filter(row => {
+        const matchesQuery = row.id.toLowerCase().includes(query) || row.name.toLowerCase().includes(query);
+        const matchesDept = selectedDept === 'ALL' || row.dept === selectedDept;
+        const matchesMarks = row.marks >= minMarks;
+        return matchesQuery && matchesDept && matchesMarks;
+      });
+
+      renderTable(filtered);
+      renderFrequencyTable(filtered);
+    }
+
+    function renderTable(rows) {
+      const tbody = document.getElementById("dfBody");
+      tbody.innerHTML = "";
+
+      document.getElementById("dfDimensions").innerText = `${rows.length} Records`;
+
+      rows.forEach((row, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td style="color:var(--text-muted); font-size:0.8rem;">${idx + 1}</td>
+          <td style="font-weight:600; color:var(--accent-blue);">${row.id}</td>
+          <td><strong>${row.name}</strong></td>
+          <td><span style="background:#e0e7ff; color:#3730a3; padding:0.15rem 0.5rem; border-radius:0.3rem; font-size:0.75rem; font-weight:700;">${row.dept}</span></td>
+          <td>${row.year}</td>
+          <td><strong style="color:${row.marks >= 90 ? '#059669' : (row.marks >= 75 ? '#2563eb' : '#d97706')};">${row.marks}</strong></td>
+          <td>${row.attendance}%</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderFrequencyTable(rows) {
+      const counts = {};
+      rows.forEach(r => counts[r.dept] = (counts[r.dept] || 0) + 1);
+
+      const depts = Object.keys(counts);
+      const total = rows.length;
+
+      document.getElementById("freqHeader").innerHTML = `<th>Metric</th>` + depts.map(d => `<th>${d}</th>`).join("");
+      document.getElementById("freqCounts").innerHTML = `<td style="color:var(--text-muted); font-weight:600;">Count</td>` + depts.map(d => `<td><strong>${counts[d]}</strong></td>`).join("");
+      document.getElementById("freqPercentages").innerHTML = `<td style="color:var(--text-muted); font-weight:600;">Share</td>` + depts.map(d => `<td>${total > 0 ? (counts[d]/total*100).toFixed(1) : 0}%</td>`).join("");
+
+      if (rows.length > 0) {
+        const marksArr = rows.map(r => r.marks).sort((a,b) => a - b);
+        const min = marksArr[0];
+        const max = marksArr[marksArr.length - 1];
+        const sum = marksArr.reduce((a,b) => a + b, 0);
+        const mean = (sum / rows.length).toFixed(1);
+
+        document.getElementById("statsSummaryBox").innerHTML =
+          `<strong>Lowest Score:</strong> ${min}.0 <br> <strong>Average Score:</strong> ${mean} <br> <strong>Highest Score:</strong> ${max}.0 <br> <strong>Records Count:</strong> ${rows.length}`;
+      } else {
+        document.getElementById("statsSummaryBox").innerHTML = "No matching records found.";
+      }
+    }
+
+    applyFilters();
+  </script>
+</body>
+</html>
