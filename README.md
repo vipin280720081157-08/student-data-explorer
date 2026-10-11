@@ -3,7 +3,6 @@
 [![R](https://img.shields.io/badge/R-4.0%2B-276DC3?logo=r&logoColor=white)](https://www.r-project.org/)
 [![Base R](https://img.shields.io/badge/Dependencies-Base%20R-blue)](#)
 [![Frontend](https://img.shields.io/badge/Frontend-HTML%20%2F%20CSS%20%2F%20JS-cyan)](#)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](#)
 
 A tabular data exploration and summary application built with **Base R** and an interactive web dashboard for inspecting, querying, subsetting, and summarizing student records using native data frames and frequency tables.
 
